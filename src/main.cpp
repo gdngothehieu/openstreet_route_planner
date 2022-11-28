@@ -10,67 +10,55 @@
 
 using namespace std::experimental;
 
-using std::cin;
-using std::cout;
-
 static std::optional<std::vector<std::byte>> ReadFile(const std::string &path)
-{
+{   
     std::ifstream is{path, std::ios::binary | std::ios::ate};
-    if (!is)
+    if( !is )
         return std::nullopt;
-
+    
     auto size = is.tellg();
-    std::vector<std::byte> contents(size);
-
+    std::vector<std::byte> contents(size);    
+    
     is.seekg(0);
-    is.read((char *)contents.data(), size);
+    is.read((char*)contents.data(), size);
 
-    if (contents.empty())
+    if( contents.empty() )
         return std::nullopt;
     return std::move(contents);
 }
 
+
 int main(int argc, const char **argv)
-{
+{    
     std::string osm_data_file = "";
-    if (argc > 1)
-    {
-        for (int i = 1; i < argc; ++i)
-            if (std::string_view{argv[i]} == "-f" && ++i < argc)
+    if( argc > 1 ) {
+        for( int i = 1; i < argc; ++i )
+            if( std::string_view{argv[i]} == "-f" && ++i < argc )
                 osm_data_file = argv[i];
     }
-    else
-    {
+    else {
         std::cout << "To specify a map file use the following format: " << std::endl;
         std::cout << "Usage: [executable] [-f filename.osm]" << std::endl;
         osm_data_file = "../map.osm";
     }
-
+    
     std::vector<std::byte> osm_data;
-
-    if (osm_data.empty() && !osm_data_file.empty())
-    {
-        std::cout << "Reading OpenStreetMap data from the following file: " << osm_data_file << std::endl;
+ 
+    if( osm_data.empty() && !osm_data_file.empty() ) {
+        std::cout << "Reading OpenStreetMap data from the following file: " <<  osm_data_file << std::endl;
         auto data = ReadFile(osm_data_file);
-        if (!data)
+        if( !data )
             std::cout << "Failed to read." << std::endl;
         else
             osm_data = std::move(*data);
     }
-
-    // TODO 1: Declare floats `start_x`, `start_y`, `end_x`, and `end_y` and get
-    // user input for these values using std::cin. Pass the user input to the
-    // RoutePlanner object below in place of 10, 10, 90, 90.
-
-    float start_x, start_y, end_x, end_y;
-    cout << "Please enter Start X between 0-100: ";
-    cin >> start_x;
-    cout << "Please enter Start Y between 0-100: ";
-    cin >> start_y;
-    cout << "Please enter End X between 0-100: ";
-    cin >> end_x;
-    cout << "Please enter End X between 0-100: ";
-    cin >> end_y;
+  
+  float start_x, start_y, end_x, end_y;
+  
+  std::cout << "Enter the starting x and y coordinates in the range of [0, 100]: ";
+  std::cin >> start_x >> start_y;
+  std::cout << "Enter the desired ending x and y coordinates in the range of [0, 100]: ";
+  std::cin >> end_x >> end_y;
 
     // Build Model.
     RouteModel model{osm_data};
@@ -85,10 +73,10 @@ int main(int argc, const char **argv)
     Render render{model};
 
     auto display = io2d::output_surface{400, 400, io2d::format::argb32, io2d::scaling::none, io2d::refresh_style::fixed, 30};
-    display.size_change_callback([](io2d::output_surface &surface) {
+    display.size_change_callback([](io2d::output_surface& surface){
         surface.dimensions(surface.display_dimensions());
     });
-    display.draw_callback([&](io2d::output_surface &surface) {
+    display.draw_callback([&](io2d::output_surface& surface){
         render.Display(surface);
     });
     display.begin_show();
